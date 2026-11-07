@@ -389,6 +389,137 @@ void fill_circle(FrameBuffer buffer, int cx, int cy, unsigned int radius, Color 
 }
 
 /**
+ * @brief Draw a rounded rectangle outline (1 px) using the midpoint circle algorithm for corners 
+ * and straight lines for edges
+ *
+ * @param buffer frame buffer object
+ * @param x x coordinate of the top-left corner
+ * @param y y coordinate of the top-left corner
+ * @param width width of the rectangle
+ * @param height height of the rectangle
+ * @param radius corner radius in pixels (clamped to half of the smallest side)
+ * @param color color of the outline
+ */
+void draw_rounded_rect(FrameBuffer buffer, int x, int y, unsigned int width, unsigned int height, unsigned int radius, Color color) {
+
+    int w = (int)width;
+    int h = (int)height;
+
+    if (w <= 0 || h <= 0)
+        return;
+
+    int r = (int)radius;
+    r = min(r, w / 2);
+    r = min(r, h / 2);
+
+    if (r == 0) {
+        draw_rect(buffer, x, y, width, height, color);
+        return;
+    }
+
+    // Centers of the four corner arcs
+    int cx1 = x + r,         cy1 = y + r;
+    int cx2 = x + w - 1 - r, cy2 = y + h - 1 - r;
+
+    // Straight edges (the arcs already cover their endpoints)
+    for (int i = cx1 + 1; i < cx2; i++) {
+        put_pixel(buffer, i, y, color);
+        put_pixel(buffer, i, y + h - 1, color);
+    }
+
+    for (int j = cy1 + 1; j < cy2; j++) {
+        put_pixel(buffer, x, j, color);
+        put_pixel(buffer, x + w - 1, j, color);
+    }
+
+    // Corner arcs (midpoint circle algorithm, one octant mirrored into 4 corners)
+    int px = r;
+    int py = 0;
+    int err = 1 - px;
+
+    while (px >= py) {
+
+        // Bottom-right
+        put_pixel(buffer, cx2 + px, cy2 + py, color);
+        // Top-right
+        put_pixel(buffer, cx2 + px, cy1 - py, color);
+        // Top-left
+        put_pixel(buffer, cx1 - px, cy1 - py, color);
+        // Bottom-left
+        put_pixel(buffer, cx1 - px, cy2 + py, color);
+
+        if (px != py) {
+            put_pixel(buffer, cx2 + py, cy2 + px, color);
+            put_pixel(buffer, cx2 + py, cy1 - px, color);
+            put_pixel(buffer, cx1 - py, cy1 - px, color);
+            put_pixel(buffer, cx1 - py, cy2 + px, color);
+        }
+
+        py++;
+        if (err < 0) {
+            err += 2 * py + 1;
+        } else {
+            px--;
+            err += 2 * (py - px) + 1;
+        }
+    }
+}
+
+/**
+ * @brief Fill a rounded rectangle using the midpoint circle algorithm for corners 
+ * and straight lines for edges
+ *
+ * @param buffer frame buffer object
+ * @param x x coordinate of the top-left corner
+ * @param y y coordinate of the top-left corner
+ * @param width width of the rectangle
+ * @param height height of the rectangle
+ * @param radius corner radius in pixels (clamped to half of the smallest side)
+ * @param color fill color
+ */
+void fill_rounded_rect(FrameBuffer buffer, int x, int y, unsigned int width, unsigned int height, unsigned int radius, Color color) {
+
+    int w = (int)width;
+    int h = (int)height;
+
+    if (w <= 0 || h <= 0)
+        return;
+
+    int r = (int)radius;
+    r = min(r, w / 2);
+    r = min(r, h / 2);
+
+    int cx1 = x + r,         cy1 = y + r;
+    int cx2 = x + w - 1 - r, cy2 = y + h - 1 - r;
+
+    // Middle band: full-width rows
+    for (int j = cy1 + 1; j < cy2; j++)
+        for (int i = x; i < x + w; i++)
+            put_pixel(buffer, i, j, color);
+
+    // Top and bottom caps: rows shrink following the circle equation
+    for (int dy = 0; dy <= r; dy++) {
+
+        int dx = (int)(sqrt((double)(r * r - dy * dy)) + 0.5);
+
+        int x_start = cx1 - dx;
+        int x_end   = cx2 + dx;
+
+        int top_row    = cy1 - dy;
+        int bottom_row = cy2 + dy;
+
+        for (int i = x_start; i <= x_end; i++)
+            put_pixel(buffer, i, top_row, color);
+
+        // Avoid painting the same row twice (matters with alpha) when cy1 == cy2
+        if (bottom_row != top_row) {
+            for (int i = x_start; i <= x_end; i++)
+                put_pixel(buffer, i, bottom_row, color);
+        }
+    }
+}
+
+/**
  * @brief Load a font from a file
  *
  * @param font_path path to the font file
@@ -403,7 +534,7 @@ int load_font(const char* font_path, stbtt_fontinfo* font) {
         return 0;
     }
 
-    // Obtener el tamaño real del archivo
+    // Determine the size of the font file
     fseek(fontFile, 0, SEEK_END);
     long size = ftell(fontFile);
     fseek(fontFile, 0, SEEK_SET);
