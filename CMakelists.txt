@@ -21,33 +21,10 @@ endif()
 option(RASTERIZER_BUILD_TEST "Build the test program" ${RASTERIZER_IS_TOP_LEVEL})
 option(BUILD_SHARED_LIBS "Build rasterizer as a shared library" OFF)
 
-# ----------------------------------------------------------------------------
-# Library: rasterizer
-# ----------------------------------------------------------------------------
-add_library(rasterizer rasterizer/rasterizer.c)
-add_library(rasterizer::rasterizer ALIAS rasterizer)
+# Library
+add_subdirectory(rasterizer)
 
-# The project root is used as the include path (equivalent to -I.),
-# so consumers can write #include "rasterizer/rasterizer.h"
-target_include_directories(rasterizer
-    PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
-)
-
-# stb_truetype and friends need libm on Linux/macOS
-if(NOT WIN32)
-    target_link_libraries(rasterizer PUBLIC m)
-endif()
-
-if(MSVC)
-    target_compile_options(rasterizer PRIVATE /W3)
-else()
-    target_compile_options(rasterizer PRIVATE -Wall)
-endif()
-
-# ----------------------------------------------------------------------------
 # Test program
-# ----------------------------------------------------------------------------
 if(RASTERIZER_BUILD_TEST)
     add_subdirectory(test)
 endif()
