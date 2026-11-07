@@ -44,15 +44,20 @@ int main() {
         return 1;
     }
 
-    Sprite textSprite = text_sprite("2D CPU Rasterizer", font, 64, white);
-    draw_sprite(buffer, 250, 10, &textSprite);
-    free_frame_buffer(textSprite);
+    Sprite sprite_text = text_sprite("2D CPU Rasterizer", font, 64, white);
+    draw_sprite(buffer, 250, 10, &sprite_text);
+    free_frame_buffer(sprite_text);
     free(font);
 
-    // Load an image and draw it
-    Sprite imageSprite = image_sprite("sprite.png");
-    draw_sprite(buffer, 300, 400, &imageSprite);
-    free_frame_buffer(imageSprite);
+    // Load and draw sprite image
+    Sprite sprite_image = image_sprite("sprite.png");
+    draw_sprite(buffer, 300, 400, &sprite_image);
+    
+    Sprite sprite_image_resized = resize_sprite(sprite_image, 100, 100);
+    draw_sprite(buffer, 450, 450, &sprite_image_resized);
+    free_frame_buffer(sprite_image_resized);
+
+    free_frame_buffer(sprite_image);
 
     // Save the frame buffer to a PNG file
     stbi_write_png("output.png", buffer.width, buffer.height, buffer.channels, buffer.data, buffer.width * buffer.channels);

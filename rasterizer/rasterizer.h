@@ -689,6 +689,43 @@ Sprite image_sprite(const char* image_path) {
 }
 
 /**
+ * @brief Resizes a sprite to a new width and height using nearest-neighbor interpolation
+ * 
+ * @param sprite sprite to be resized
+ * @param new_width new width of the sprite
+ * @param new_height new height of the sprite
+ * @return resized sprite
+ */
+Sprite resize_sprite(Sprite sprite, unsigned int new_width, unsigned int new_height) {
+
+    Sprite resized_sprite;
+    resized_sprite.width = new_width;
+    resized_sprite.height = new_height;
+    resized_sprite.channels = sprite.channels;
+
+    resized_sprite.data = (unsigned char*)malloc(new_width * new_height * sprite.channels);
+    if (!resized_sprite.data) {
+        fprintf(stderr, "Error allocating memory for resized sprite\n");
+        return resized_sprite;
+    }
+
+    for (unsigned int j = 0; j < new_height; j++) {
+        for (unsigned int i = 0; i < new_width; i++) {
+
+            unsigned int src_x = (i * sprite.width) / new_width;
+            unsigned int src_y = (j * sprite.height) / new_height;
+
+            for (unsigned int c = 0; c < sprite.channels; c++) {
+                resized_sprite.data[(j * new_width + i) * sprite.channels + c] =
+                    sprite.data[(src_y * sprite.width + src_x) * sprite.channels + c];
+            }
+        }
+    }
+
+    return resized_sprite;
+}
+
+/**
  * @brief Draws a sprite on the frame buffer
  * 
  * @param buffer buffer where the sprite will be drawn
