@@ -37,16 +37,12 @@ int main() {
     fill_circle(buffer, 700, 300, 50, blue);
 
     // Load font and draw text
-    stbtt_fontinfo* font = (stbtt_fontinfo*)malloc(sizeof(stbtt_fontinfo));
-    if (!load_font("Roboto-Light.ttf", font)) {
-        fprintf(stderr, "Error cargando la fuente\n");
-        free_frame_buffer(buffer);
-        return 1;
-    }
+    stbtt_fontinfo* font = load_font("Roboto-Light.ttf");
 
     Sprite sprite_text = text_sprite("2D CPU Rasterizer", font, 64, white);
     draw_sprite(buffer, 250, 10, &sprite_text);
     free_frame_buffer(sprite_text);
+    
     free(font);
 
     // Load and draw sprite image

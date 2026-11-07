@@ -23,13 +23,13 @@ REM author: Alberto Morcillo Sanz
 REM GitHub: MorcilloSanz
 
 REM Source files
-SET SRC="test/main.c"
+SET "SRC=rasterizer/rasterizer.c test/main.c"
 
 REM Include directory
-SET INCLUDE_DIR="."
+SET "INCLUDE_DIR=."
 
 REM File name of the executable
-SET EXE="main.exe"
+SET "EXE=main.exe"
 
 REM Create build directory if it doesn't exist
 if not exist build mkdir build
